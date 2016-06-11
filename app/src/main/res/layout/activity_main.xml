@@ -1,0 +1,86 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/mediaPlayerControlBar">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/snackbarPosition"
+            android:layout_weight="0.33"
+            android:layout_above="@+id/mediaPlayerControlBar">
+
+            <android.support.design.widget.AppBarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                android:id="@+id/view">
+
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="?attr/colorPrimary"
+                    app:layout_scrollFlags="enterAlways"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/tabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:tabMode="scrollable"
+                    app:tabGravity="fill"
+                    app:tabMaxWidth="0dp"/>
+            </android.support.design.widget.AppBarLayout>
+
+            <android.support.v4.view.ViewPager
+                android:id="@+id/viewpager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:layout_below="@+id/view" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/tintImage"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:background="#32000000"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            app:layout_behavior="ua.rodionov.unimusic.ScrollAwareFABBehavior"
+            app:fabSize="normal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/ic_search_white_24dp"
+            android:id="@+id/fab"
+            android:layout_margin="16dp"
+            app:elevation="4dp"/>
+
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <fragment android:name="ua.rodionov.unimusic.mediaPlayerControlBar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:id="@+id/mediaPlayerControlBar"
+        android:layout_gravity="bottom"
+        app:layout_anchor="@id/snackbarPosition"
+        app:layout_anchorGravity="bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>

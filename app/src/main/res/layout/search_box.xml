@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:id="@+id/SearchBox"
+        android:layout_alignParentTop="true"
+        android:background="@color/colorPrimary"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:hint="Поиск музыки..."
+        android:textColor="#ffffff"
+        android:textColorHint="#ffffff"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
+        android:layout_toRightOf="@+id/backButton"
+        android:layout_toEndOf="@+id/backButton"
+        android:inputType="textImeMultiLine"
+        android:imeOptions="actionSearch"/>
+
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="70dp"
+        android:id="@+id/backButton"
+        android:layout_alignBottom="@+id/SearchBox"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/colorPrimary"
+        android:src="@drawable/ic_arrow_back_white_24dp"
+        android:scaleType="center" />
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/SearchResultList"
+        android:layout_below="@+id/SearchBox"
+        android:layout_alignRight="@+id/SearchBox"
+        android:layout_alignEnd="@+id/SearchBox" />
+
+</RelativeLayout>

@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">UniMusic</string>
+    <string name="search_hint">Поиск музыки...</string>
+    <string name="tracks">Песни</string>
+    <string name="contextMenuTitle">Выберете действие...</string>
+    <string-array name="contextMenuActions">
+        <item>Воспроизвести</item>
+        <item>Воспроизвести следующим*</item>
+        <item>Показать альбом*</item>
+        <item>Показать все песни исполнителя*</item>
+        <item>Добавить в очередь*</item>
+        <item>Добавить в плейлист*</item>
+        <item>Переименовать*</item>
+        <item>Удалить</item>
+    </string-array>
+    <integer name="com_vk_sdk_AppId">5493500</integer>
+</resources>
