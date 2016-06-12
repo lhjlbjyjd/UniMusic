@@ -1,5 +1,7 @@
 package ua.rodionov.unimusic;
 
+import android.*;
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -11,9 +13,12 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -42,6 +47,12 @@ import com.vk.sdk.VKSdk;
 import com.vk.sdk.util.VKUtil;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -94,26 +105,72 @@ public class MainActivity extends AppCompatActivity {
 
         View coordinatorLayoutView = findViewById(R.id.snackbarPosition);
 
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+        if(Build.VERSION.SDK_INT >= 23 && coordinatorLayoutView != null) {
 
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                Snackbar.make(coordinatorLayoutView,
-                        "Как, по твоему, я должен открыть музыку, если у меня нет доступа к файловой системе?",
-                        Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
-                    }
-                }).show();
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                        0);
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Snackbar.make(coordinatorLayoutView,
+                            "Как, по твоему, я должен открыть музыку, если у меня нет доступа к файловой системе?",
+                            Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
+                        }
+                    }).show();
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            0);
+                }
             }
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    Snackbar.make(coordinatorLayoutView,
+                            "Как, по твоему, я должен открыть музыку, если у меня нет доступа к файловой системе?",
+                            Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                        }
+                    }).show();
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            0);
+                }
+            }
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WAKE_LOCK)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.WAKE_LOCK)) {
+                    Snackbar.make(coordinatorLayoutView,
+                            "Как, по твоему, я должен открыть музыку, если у меня нет доступа к файловой системе?",
+                            Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.WAKE_LOCK}, 0);
+                        }
+                    }).show();
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WAKE_LOCK},
+                            0);
+                }
+            }
+
         }
 
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -215,9 +272,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new Tracks(), "Песни");
-        adapter.addFragment(new VKtracks(), "ВКонтакте");
-        adapter.addFragment(new DeviceTracks(), "Устройство");
+        adapter.addFragment(new Tracks(), getApplicationContext().getString(R.string.tracks));
+        adapter.addFragment(new VKtracks(), getApplicationContext().getString(R.string.vk));
+        adapter.addFragment(new DeviceTracks(), getApplicationContext().getString(R.string.device));
         viewPager.setAdapter(adapter);
     }
 
@@ -339,11 +396,6 @@ public class MainActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
         serviceStarted = savedInstanceState.getBoolean("mediaControlBarOpened");
         barVisible = savedInstanceState.getBoolean("barVisible");
-    }
-
-    public void setFragment(mediaPlayerControlBar f){
-        frag1 = f;
-        Log.d("FRAG", "SET");
     }
 
     public void mediaPlayerStart(int pos, ArrayList<song> songs){

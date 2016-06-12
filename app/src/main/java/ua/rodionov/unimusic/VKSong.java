@@ -15,6 +15,9 @@ public class VKSong {
         URL = _URL;
     }
 
+    public String getId() {
+        return String.valueOf(id);
+    }
     public String getArtist(){
         return Artist;
     }

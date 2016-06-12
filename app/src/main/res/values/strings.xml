@@ -1,17 +1,21 @@
 <resources>
     <string name="app_name">UniMusic</string>
-    <string name="search_hint">Поиск музыки...</string>
-    <string name="tracks">Песни</string>
-    <string name="contextMenuTitle">Выберете действие...</string>
+    <string name="search_hint">Search music…</string>
+    <string name="tracks">All songs</string>
+    <string name="contextMenuTitle">Select an action…</string>
     <string-array name="contextMenuActions">
-        <item>Воспроизвести</item>
-        <item>Воспроизвести следующим*</item>
-        <item>Показать альбом*</item>
-        <item>Показать все песни исполнителя*</item>
-        <item>Добавить в очередь*</item>
-        <item>Добавить в плейлист*</item>
-        <item>Переименовать*</item>
-        <item>Удалить</item>
+        <item>Play</item>
+        <item>Play next*</item>
+        <item>Show album*</item>
+        <item>Show artist*</item>
+        <item>Add to queue*</item>
+        <item>Add to playlist*</item>
+        <item>Rename*</item>
+        <item>Delete</item>
     </string-array>
     <integer name="com_vk_sdk_AppId">5493500</integer>
+    <string name="vk">vk</string>
+    <string name="device">device</string>
+    <string name="download_complete">File successfuly downloaded and added to playlist</string>
+    <string name="download_error">Download failed with an error:</string>
 </resources>

@@ -58,7 +58,7 @@ public class mediaPlayerControlBar extends Fragment {
         Log.d("CREATEVIEW", "CREATEWIEW");
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.media_control, container, false);
-        this.progressBar = (CircularProgressBar) view.findViewById(R.id.progressBar);
+        this.progressBar = (CircularProgressBar) view.findViewById(R.id.ProgressBar);
         return view;
     }
 

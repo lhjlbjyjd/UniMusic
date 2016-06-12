@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UniMusic</string>
+    <string name="contextMenuTitle">Виберіть дію…</string>
+    <string name="device">Пристрій</string>
+    <string name="search_hint">Пошук музики…</string>
+    <string name="tracks">Усі пісні</string>
+    <string name="vk">ВКонтакте</string>
+    <string name="download_complete">Файл збережено та додано до плейлісту</string>
+    <string name="download_error">Помилка завантаження:</string>
+</resources>
