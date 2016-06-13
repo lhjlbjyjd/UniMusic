@@ -85,7 +85,7 @@ public class mediaPlayerService extends Service{
                         }
                     }
                 };
-        /*NotificationCompat.Builder mBuilder =
+        NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle("Скоро тут будет управление")
@@ -93,7 +93,7 @@ public class mediaPlayerService extends Service{
         Intent resultIntent = new Intent(this, songFocus.class);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addNextIntent(resultIntent);
-        startForeground(256781,mBuilder.build());*/
+        startForeground(256781,mBuilder.build());
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
