@@ -30,6 +30,7 @@ public class mediaPlayerService extends Service{
     MyBinder binder = new MyBinder();
 
     MainActivity mainActivity;
+    String TAG = "MUSIC";
     long dur;
     private Timer mTimer;
     private MyTimerTask mMyTimerTask;
@@ -43,9 +44,13 @@ public class mediaPlayerService extends Service{
     private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
     private boolean shuffleActive = false;
     private int loop = 0;
+    boolean songInterrupted = false;
     SharedPreferences sPref;
     SharedPreferences.Editor editor;
     Random rand = new Random();
+    AudioManager am;
+    AudioManager.OnAudioFocusChangeListener afChangeListener;
+    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -58,6 +63,25 @@ public class mediaPlayerService extends Service{
     public void onCreate() {
         super.onCreate();
 
+        am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
+        afChangeListener =
+                new AudioManager.OnAudioFocusChangeListener() {
+                    public void onAudioFocusChange(int focusChange) {
+                        if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                            pausePlayer();
+                            songInterrupted = true;
+                        } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                            if(songInterrupted){
+                                resumePlayer();
+                                songInterrupted = false;
+                            }
+                        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                            am.abandonAudioFocus(afChangeListener);
+                            pausePlayer();
+                        }
+                    }
+                };
         /*NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher)
@@ -84,7 +108,7 @@ public class mediaPlayerService extends Service{
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Write functions here
+        //Write functions her
         Log.d("SERVICE", "STARTED2");
         return START_STICKY;
     }
@@ -119,46 +143,63 @@ public class mediaPlayerService extends Service{
     }
 
     public void playerControl(ArrayList<song> _songs, int _position){
-        Log.d("SERVICE", "1");
-        position = _position;
-        songs = _songs;
+        int result = am.requestAudioFocus(afChangeListener,
+                // Use the music stream.
+                AudioManager.STREAM_MUSIC,
+                // Request permanent focus.
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.d("SERVICE", "1");
+            position = _position;
+            songs = _songs;
 
-        playngSongName.setText(songs.get(position).getTitle());
-        frag1.setProgressBar(0);
+            playngSongName.setText(songs.get(position).getTitle());
+            frag1.setProgressBar(0);
 
-        Log.d("SERVICE", "2");
-        if(songs.get(position).getSource() == 1) {
-            try {
-                mp.reset();
-                mp.setDataSource(VK_PATH + (songs.get(position)).getName());
-                mp.prepare();
-                mp.start();
-            } catch (IOException e) {
-                e.printStackTrace();
+            Log.d("SERVICE", "2");
+            if(songs.get(position).getSource() == 1) {
+                try {
+                    mp.reset();
+                    mp.setDataSource(VK_PATH + (songs.get(position)).getName());
+                    mp.prepare();
+                    mp.start();
+                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity.getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                    if(bar != null && bar.getView() != null) {
+                        ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                        btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }else{
+                try {
+                    mp.reset();
+                    mp.setDataSource(songs.get(position).data);
+                    mp.prepare();
+                    mp.start();
+                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity.getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                    if(bar != null && bar.getView() != null) {
+                        ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                        btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }else{
-            try {
-                mp.reset();
-                mp.setDataSource(songs.get(position).data);
-                mp.prepare();
-                mp.start();
-            } catch (IOException e) {
-                e.printStackTrace();
+            String duration = songs.get(position).getDuration();
+            Log.v("time", duration);
+            dur = Long.parseLong(duration);
+
+            Log.d("SERVICE", "3");
+
+            if (mTimer != null) {
+                mTimer.cancel();
             }
+
+            mTimer = new Timer();
+            mMyTimerTask = new MyTimerTask();
+            mTimer.schedule(mMyTimerTask, 500, 500);
         }
-        String duration = songs.get(position).getDuration();
-        Log.v("time", duration);
-        dur = Long.parseLong(duration);
-
-        Log.d("SERVICE", "3");
-
-        if (mTimer != null) {
-            mTimer.cancel();
-        }
-
-        mTimer = new Timer();
-        mMyTimerTask = new MyTimerTask();
-        mTimer.schedule(mMyTimerTask, 500, 500);
     }
 
     public void playNextSong(){
@@ -166,7 +207,12 @@ public class mediaPlayerService extends Service{
             if (!shuffleActive) {
                 position++;
                 if (position == songs.size()) {
-                    playerControl(songs, 0);
+                    if(loop == 2) {
+                        playerControl(songs, 0);
+                    }else{
+                        mp.stop();
+                        am.abandonAudioFocus(afChangeListener);
+                    }
                 } else {
                     playerControl(songs, position);
                 }
@@ -211,12 +257,17 @@ public class mediaPlayerService extends Service{
 
     public void pausePlayer(){
         mp.pause();
-        playerActive = true;
     }
 
     public void resumePlayer() {
-        mp.start();
-        playerActive = false;
+        int result = am.requestAudioFocus(afChangeListener,
+                // Use the music stream.
+                AudioManager.STREAM_MUSIC,
+                // Request permanent focus.
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            mp.start();
+        }
     }
 
     public void setShuffle(boolean res){

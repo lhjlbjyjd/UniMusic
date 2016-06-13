@@ -38,11 +38,13 @@ public class mediaPlayerControlBar extends Fragment {
 
             @Override
             public void onClick(View v) {
-                if(!mainActivity.service.playerActive)
+                if(mainActivity.service.mp.isPlaying())
                 {
+                    Log.d("Uads", "UA");
                     mainActivity.service.pausePlayer();
                     playButton.setImageResource(R.drawable.ic_play_arrow_black_48dp);
                 }else{
+                    Log.d("Uads", "AU");
                     mainActivity.service.resumePlayer();
                     playButton.setImageResource(R.drawable.ic_pause_black_48dp);
                 }

@@ -1,30 +1,16 @@
 package ua.rodionov.unimusic;
 
-import android.content.DialogInterface;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 class vkmp3Filter implements FilenameFilter{
     public boolean accept(File dir, String name){
@@ -38,7 +24,7 @@ public class Tracks extends Fragment {
 
     RecyclerView list;
     SongListAdapter listAdapter;
-    private ArrayList<song> songs = new ArrayList<>();
+    public ArrayList<song> songs = new ArrayList<>();
     MainActivity mainActivity;
 
 
@@ -56,6 +42,12 @@ public class Tracks extends Fragment {
         LinearLayoutManager llm = new LinearLayoutManager(getActivity());
         list.setLayoutManager(llm);
         list.setAdapter(listAdapter);
+    }
+
+    public void refreshList(ArrayList<song> _songs){
+        songs = _songs;
+        listAdapter = new SongListAdapter(getContext(),songs, mainActivity);
+        list.swapAdapter(listAdapter, true);
     }
 
     @Override

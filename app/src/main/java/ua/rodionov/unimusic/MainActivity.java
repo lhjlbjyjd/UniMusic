@@ -56,6 +56,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     TabLayout tabLayout;
     ViewPager viewPager;
     Tracks track = new Tracks();
+    VKtracks vktracks = new VKtracks();
+    DeviceTracks deviceTracks = new DeviceTracks();
     boolean serviceStarted = false, barVisible = true;
     Fragment frame;
     mediaPlayerControlBar frag1;
@@ -272,9 +275,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new Tracks(), getApplicationContext().getString(R.string.tracks));
-        adapter.addFragment(new VKtracks(), getApplicationContext().getString(R.string.vk));
-        adapter.addFragment(new DeviceTracks(), getApplicationContext().getString(R.string.device));
+        adapter.addFragment(track, getApplicationContext().getString(R.string.tracks));
+        adapter.addFragment(vktracks, getApplicationContext().getString(R.string.vk));
+        adapter.addFragment(deviceTracks, getApplicationContext().getString(R.string.device));
         viewPager.setAdapter(adapter);
     }
 
@@ -330,22 +333,24 @@ public class MainActivity extends AppCompatActivity {
                         File[] listOfFilesVK = home_vk.listFiles(new vkmp3Filter());
                         if (listOfFilesVK != null && listOfFilesVK.length > 0) {
                             for (File file : home_vk.listFiles(new vkmp3Filter())) {
-                                mmr.setDataSource(String.valueOf(VK_PATH + "/" + file.getName()));
-                                String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                                if (Title == null) {
-                                    Title = file.getName();
+                                if(!file.getName().equals("song_storage")) {
+                                    mmr.setDataSource(String.valueOf(VK_PATH + file.getName()));
+                                    String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                                    if (Title == null) {
+                                        Title = file.getName();
+                                    }
+                                    byte Source = 1;
+                                    String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                                    if (Album == null) {
+                                        Album = "Unknown Album";
+                                    }
+                                    String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                                    if (Artist == null) {
+                                        Artist = "Unknown Artist";
+                                    }
+                                    songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, null));
                                 }
-                                byte Source = 1;
-                                String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                                String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-                                if (Album == null) {
-                                    Album = "Unknown Album";
-                                }
-                                String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                                if (Artist == null) {
-                                    Artist = "Unknown Artist";
-                                }
-                                songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, null));
                             }
                         }
                         Collections.sort(songs, new Comparator<song>() {
@@ -373,6 +378,110 @@ public class MainActivity extends AppCompatActivity {
                 songs = new Gson().fromJson(sPref.getString("songs", ""), new TypeToken<List<song>>() {
                 }.getType());
             }
+        }
+    }
+
+    public void refreshPlaylist(){
+        if(ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            sPref = getPreferences(MODE_PRIVATE);
+            editor = sPref.edit();
+            final Handler h = new Handler() {
+                public void handleMessage(android.os.Message msg) {
+                    ContentResolver cr = getContentResolver();
+
+                    Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                    String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+                    String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+                    Cursor cur = cr.query(uri, null, selection, null, sortOrder);
+                    int count;
+
+                    if (cur != null) {
+                        count = cur.getCount();
+
+                        if (count > 0) {
+                            while (cur.moveToNext()) {
+                                String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
+                                if (data.endsWith(".mp3") || data.endsWith(".flac")) {
+                                    File file = new File(data);
+                                    mmr.setDataSource(data);
+                                    String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                                    if (Title == null) {
+                                        Title = file.getName();
+                                    }
+                                    byte Source = 0;
+                                    String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                                    if (Album == null) {
+                                        Album = "Unknown Album";
+                                    }
+                                    String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                                    if (Artist == null) {
+                                        Artist = "Unknown artist";
+                                    }
+                                    songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, data));
+                                }
+                            }
+
+                        }
+                    }
+                    cur.close();
+
+                    File home_vk = new File(VK_PATH);
+                    File[] listOfFilesVK = home_vk.listFiles(new vkmp3Filter());
+                    if (listOfFilesVK != null && listOfFilesVK.length > 0) {
+                        for (File file : home_vk.listFiles(new vkmp3Filter())) {
+                            if(!file.getName().equals("song_storage")) {
+                                mmr.setDataSource(String.valueOf(VK_PATH + file.getName()));
+                                String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                                if (Title == null) {
+                                    Title = file.getName();
+                                }
+                                byte Source = 1;
+                                String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                                if (Album == null) {
+                                    Album = "Unknown Album";
+                                }
+                                String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                                if (Artist == null) {
+                                    Artist = "Unknown Artist";
+                                }
+                                songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, null));
+                            }
+                        }
+                    }
+                    Collections.sort(songs, new Comparator<song>() {
+                        @Override
+                        public int compare(song lhs, song rhs) {
+                            Log.d("LHS", lhs.Title);
+                            Log.d("RHS", rhs.Title);
+                            Log.d("RES", String.valueOf(lhs.Title.compareTo(rhs.Title)));
+                            return lhs.Title.compareTo(rhs.Title);
+                        }
+                    });
+                    editor.putBoolean("ListCreated", true);
+                    editor.putString("songs", new Gson().toJson(songs));
+                    editor.apply();
+                    if(track != null && track.list != null){
+                        track.refreshList(songs);
+                    }
+                    if(vktracks != null && vktracks.list != null){
+                        vktracks.refreshList(songs);
+                    }
+                    if(deviceTracks != null && deviceTracks.list != null){
+                        deviceTracks.refreshList(songs);
+                    }
+                }
+            };
+
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    h.sendEmptyMessage(0);
+                }
+            });
+            t.start();
         }
     }
 

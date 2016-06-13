@@ -20,7 +20,7 @@ public class DeviceTracks extends Fragment {
 
     RecyclerView list;
     SongListAdapter listAdapter;
-    public ArrayList<song> songs;
+    ArrayList<song> songs;
     MainActivity mainActivity;
 
     public DeviceTracks(){
@@ -45,6 +45,19 @@ public class DeviceTracks extends Fragment {
         LinearLayoutManager llm = new LinearLayoutManager(getActivity());
         list.setLayoutManager(llm);
         list.setAdapter(listAdapter);
+    }
+
+    public void refreshList(ArrayList<song> _songs){
+        songs = new ArrayList<>(_songs);
+        Iterator<song> itr = songs.iterator();
+        while (itr.hasNext()) {
+            song element = itr.next();
+            if(element.getSource() == 1){
+                itr.remove();
+            }
+        }
+        listAdapter = new SongListAdapter(getContext(),songs, mainActivity);
+        list.swapAdapter(listAdapter, true);
     }
 
     @Override

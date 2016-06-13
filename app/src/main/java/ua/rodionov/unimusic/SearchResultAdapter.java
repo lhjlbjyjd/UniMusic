@@ -26,10 +26,14 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.ID3v24Tag;
 import com.mpatric.mp3agic.Mp3File;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,6 +50,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     public CircularProgressBar pb;
     public ImageButton db;
     private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
+    File file = new File(VK_PATH + "song_storage");
 
     SearchResultAdapter(Context context, ArrayList<VKSong> songs, MainActivity _mainActivity){
         super();
@@ -75,8 +80,6 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             layout = (RelativeLayout) v.findViewById(R.id.layout);
             downloadButton = (ImageButton) v.findViewById(R.id.downloadButton);
             progressBar = (CircularProgressBar) v.findViewById(R.id.ProgressBar);
-            pb = progressBar;
-            db = downloadButton;
         }
     }
 
@@ -97,6 +100,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 mainActivity.service.startPreviewPlayer(objects.get(position).getURL());
             }
         });
+        holder.downloadButton.setTag(holder);
         holder.downloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,6 +109,8 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                         == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(mainActivity,
                         Manifest.permission.WAKE_LOCK)
                         == PackageManager.PERMISSION_GRANTED) {
+                    pb = ((ViewHolder) v.getTag()).progressBar;
+                    db = (ImageButton) v;
                     new DownloadTask(ctx).execute(objects.get(position).getTitle(), objects.get(position).getArtist(),
                             objects.get(position).getId(), objects.get(position).getURL());
                 }else{
@@ -112,6 +118,25 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 }
             }
         });
+
+        if(file.exists()) {
+
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+
+                while ((line = br.readLine()) != null) {
+                    if (line.equals(objects.get(position).getId())) {
+                        holder.downloadButton.setOnClickListener(null);
+                        holder.downloadButton.setImageResource(R.drawable.ic_done_black_36dp);
+
+                    }
+                }
+                br.close();
+            } catch (IOException e) {
+                //
+            }
+        }
     }
 
     private class DownloadTask extends AsyncTask<String, Integer, String> {
@@ -135,6 +160,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                     getClass().getName());
             mWakeLock.acquire();
             pb.setVisibility(View.VISIBLE);
+            db.setVisibility(View.INVISIBLE);
         }
 
         @Override
@@ -207,6 +233,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
         protected void onPostExecute(String result) {
             mWakeLock.release();
             pb.setVisibility(View.GONE);
+            db.setVisibility(View.VISIBLE);
             db.setImageResource(R.drawable.ic_done_black_36dp);
 
             try {
@@ -226,12 +253,48 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 id3v2Tag.setArtist(artist);
                 id3v2Tag.setTitle(title);
                 id3v2Tag.setComment(id);
-                mp3file.save(VK_PATH+filename);
+                mp3file.save(VK_PATH+filename+"_tagged");
+                File fl = new File(VK_PATH+filename);
+                fl.delete();
             }catch(Exception e){
                 e.printStackTrace();
             }
 
-            //TODO: media data storage, done arrow, previewPlayer.
+            try {
+
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+                ArrayList<String> temp = new ArrayList<>();
+
+                while ((line = br.readLine()) != null) {
+                    temp.add(line);
+                }
+                br.close();
+
+                FileOutputStream fOut = new FileOutputStream(file);
+                OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+
+                for (String s : temp) {
+                    myOutWriter.append(s);
+                    myOutWriter.append('\n');
+                }
+
+                myOutWriter.append(id);
+                myOutWriter.append('\n');
+
+                myOutWriter.close();
+                fOut.close();
+            }catch (IOException e){
+                //
+            }
+
+            mainActivity.refreshPlaylist();
+
+            //TODO: previewPlayer.
 
             if (result != null)
                 Toast.makeText(context,ctx.getString(R.string.download_error)+result, Toast.LENGTH_LONG).show();
