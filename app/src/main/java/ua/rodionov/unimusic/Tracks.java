@@ -1,7 +1,9 @@
 package ua.rodionov.unimusic;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -19,13 +21,14 @@ class vkmp3Filter implements FilenameFilter{
 }
 
 
-public class Tracks extends Fragment {
+public class Tracks extends Fragment{
 
 
     RecyclerView list;
     SongListAdapter listAdapter;
     public ArrayList<song> songs = new ArrayList<>();
     MainActivity mainActivity;
+    SwipeRefreshLayout mSwipeRefreshLayout;
 
 
     public Tracks() {
@@ -47,7 +50,7 @@ public class Tracks extends Fragment {
     public void refreshList(ArrayList<song> _songs){
         songs = _songs;
         listAdapter = new SongListAdapter(getContext(),songs, mainActivity);
-        list.swapAdapter(listAdapter, true);
+        list.swapAdapter(listAdapter, false);
     }
 
     @Override
@@ -62,6 +65,17 @@ public class Tracks extends Fragment {
         View view = inflater.inflate(R.layout.tracks, container, false);
 
         list = (RecyclerView) view.findViewById(R.id.list);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_container);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mainActivity.refreshPlaylist();
+            }
+        });
+        mSwipeRefreshLayout.setColorSchemeColors(
+                Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.RED);
         return view;
     }
+
+
 }

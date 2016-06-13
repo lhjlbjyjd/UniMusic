@@ -74,7 +74,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
                 mainActivity.mediaPlayerStart(position, objects);
             }
         });
-        /*holder.layout.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.layout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
@@ -92,7 +92,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
                 alert.show();
                 return true;
             }
-        });*/
+        });
     }
 
     @Override

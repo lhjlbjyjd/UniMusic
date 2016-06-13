@@ -41,6 +41,7 @@ public class mediaPlayerService extends Service{
     mediaPlayerControlBar frag1;
     int position;
     public MediaPlayer mp = new MediaPlayer();
+    public MediaPlayer previewMP = new MediaPlayer();
     private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
     private boolean shuffleActive = false;
     private int loop = 0;
@@ -49,8 +50,10 @@ public class mediaPlayerService extends Service{
     SharedPreferences.Editor editor;
     Random rand = new Random();
     AudioManager am;
+    String previewSongName = "";
     AudioManager.OnAudioFocusChangeListener afChangeListener;
     private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener;
+    String source;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -125,18 +128,26 @@ public class mediaPlayerService extends Service{
         playngSongName = (TextView)frag1.getView().findViewById(R.id.activeSongName);
     }
 
-    public void startPreviewPlayer(String url){
+    public void startPreviewPlayer(String url, String name){
+        previewSongName = name;
         try {
-            mp.reset();
-            mp.setDataSource(url);
-            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            mp.pause();
+            previewMP.setDataSource(url);
+            previewMP.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            dur = previewMP.getDuration();
+            mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                    .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+            if(bar != null && bar.getView() != null) {
+                ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                btn.setImageResource(R.drawable.ic_pause_black_48dp);
+            }
+            previewMP.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     mp.start();
                 }
             });
-            mp.prepareAsync();
+            previewMP.prepareAsync();
         }catch(IOException ignore) {
 
         }
@@ -163,7 +174,8 @@ public class mediaPlayerService extends Service{
                     mp.setDataSource(VK_PATH + (songs.get(position)).getName());
                     mp.prepare();
                     mp.start();
-                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity.getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                            .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
                     if(bar != null && bar.getView() != null) {
                         ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
                         btn.setImageResource(R.drawable.ic_pause_black_48dp);
@@ -177,7 +189,8 @@ public class mediaPlayerService extends Service{
                     mp.setDataSource(songs.get(position).data);
                     mp.prepare();
                     mp.start();
-                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity.getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                    mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                            .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
                     if(bar != null && bar.getView() != null) {
                         ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
                         btn.setImageResource(R.drawable.ic_pause_black_48dp);
@@ -210,6 +223,13 @@ public class mediaPlayerService extends Service{
                     if(loop == 2) {
                         playerControl(songs, 0);
                     }else{
+                        position = 0;
+                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                        bar.setProgressBar(0);
+                        if(bar.getView() != null) {
+                            ((ImageButton) bar.getView().findViewById(R.id.playButton)).setImageResource(R.drawable.ic_pause_black_48dp);
+                        }
                         mp.stop();
                         am.abandonAudioFocus(afChangeListener);
                     }
@@ -286,6 +306,10 @@ public class mediaPlayerService extends Service{
         editor.commit();
     }
 
+    public void setPlaylist(ArrayList<song> _songs){
+        songs = _songs;
+    }
+
     public int getLooping(){
         return loop;
     }
@@ -300,7 +324,11 @@ public class mediaPlayerService extends Service{
                     mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity.getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
                     try {
                         bar.setProgressBar((mp.getCurrentPosition() * 100) / dur);
-                        ((TextView) bar.getView().findViewById(R.id.activeSongName)).setText(songs.get(position).getTitle());
+                        if(previewMP.isPlaying() && position < songs.size()){
+                            ((TextView) bar.getView().findViewById(R.id.activeSongName)).setText(previewSongName);
+                        }else if(position < songs.size()){
+                            ((TextView) bar.getView().findViewById(R.id.activeSongName)).setText(songs.get(position).getTitle());
+                        }
                     }catch(NullPointerException ignored){
 
                     }

@@ -1,8 +1,10 @@
 package ua.rodionov.unimusic;
 
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -22,6 +24,7 @@ public class DeviceTracks extends Fragment {
     SongListAdapter listAdapter;
     ArrayList<song> songs;
     MainActivity mainActivity;
+    SwipeRefreshLayout mSwipeRefreshLayout;
 
     public DeviceTracks(){
 
@@ -72,6 +75,16 @@ public class DeviceTracks extends Fragment {
         View view = inflater.inflate(R.layout.tracks, container, false);
 
         list = (RecyclerView) view.findViewById(R.id.list);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_container);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mainActivity.refreshPlaylist();
+            }
+        });
+        mSwipeRefreshLayout.setColorSchemeColors(
+                Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.RED);
         return view;
     }
 }

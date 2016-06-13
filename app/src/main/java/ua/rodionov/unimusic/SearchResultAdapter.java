@@ -97,7 +97,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
         holder.layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mainActivity.service.startPreviewPlayer(objects.get(position).getURL());
+                mainActivity.service.startPreviewPlayer(objects.get(position).getURL(),objects.get(position).getTitle());
             }
         });
         holder.downloadButton.setTag(holder);
