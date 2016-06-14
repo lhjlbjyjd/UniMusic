@@ -379,7 +379,7 @@ public class mediaPlayerService extends Service{
         }
     }
 
-    public static class Receiver extends BroadcastReceiver{
+    public class Receiver extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {
