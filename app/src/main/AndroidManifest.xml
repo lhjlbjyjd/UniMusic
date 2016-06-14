@@ -30,6 +30,19 @@
         <service
             android:name=".mediaPlayerService"
             android:enabled="true" />
+
+        <receiver android:name=".mediaPlayerService$Receiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="ua.rodionov.unimusic.ACTION_PLAY" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="ua.rodionov.unimusic.ACTION_PREVIOUS" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="ua.rodionov.unimusic.ACTION_NEXT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

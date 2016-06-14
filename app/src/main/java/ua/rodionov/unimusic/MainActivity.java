@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     Intent intent;
     MediaMetadataRetriever mmr = new MediaMetadataRetriever();
     private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
+    private static final String UNI_PATH = Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
     InterstitialAd mInterstitialAd;
 
 
@@ -105,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
         if(!VKSdk.isLoggedIn()){
             VKSdk.login(this, VKScope.AUDIO);
         }
+
+        File file = new File(UNI_PATH);
 
         View coordinatorLayoutView = findViewById(R.id.snackbarPosition);
 
@@ -180,6 +183,13 @@ public class MainActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         } else {
             getSupportActionBar().show();
+        }
+
+        if(!file.exists() && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED){
+            Log.d("FILE", "FILE");
+            file.mkdirs();
         }
 
         getSupportFragmentManager()
@@ -325,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
                         File[] listOfFilesVK = home_vk.listFiles(new vkmp3Filter());
                         if (listOfFilesVK != null && listOfFilesVK.length > 0) {
                             for (File file : home_vk.listFiles(new vkmp3Filter())) {
-                                if(!file.getName().equals("song_storage")) {
+                                if(!file.getName().equals("song_storage") && !file.getName().endsWith(".part")) {
                                     mmr.setDataSource(String.valueOf(VK_PATH + file.getName()));
                                     String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
                                     if (Title == null) {
@@ -345,6 +355,32 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }
+
+                        File home_uni = new File(UNI_PATH);
+                        File[] listOfFilesUNI = home_uni.listFiles(new vkmp3Filter());
+                        if (listOfFilesUNI != null && listOfFilesUNI.length > 0) {
+                            for (File file : home_uni.listFiles(new vkmp3Filter())) {
+                                if(!file.getName().equals("song_storage") && !file.getName().endsWith(".part")) {
+                                    mmr.setDataSource(String.valueOf(UNI_PATH + file.getName()));
+                                    String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                                    if (Title == null) {
+                                        Title = file.getName();
+                                    }
+                                    byte Source = 2;
+                                    String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                                    if (Album == null) {
+                                        Album = "Unknown Album";
+                                    }
+                                    String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                                    if (Artist == null) {
+                                        Artist = "Unknown Artist";
+                                    }
+                                    songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, null));
+                                }
+                            }
+                        }
+
                         Collections.sort(songs, new Comparator<song>() {
                             @Override
                             public int compare(song lhs, song rhs) {
@@ -511,7 +547,8 @@ public class MainActivity extends AppCompatActivity {
             File[] listOfFilesVK = home_vk.listFiles(new vkmp3Filter());
             if (listOfFilesVK != null && listOfFilesVK.length > 0) {
                 for (File file : home_vk.listFiles(new vkmp3Filter())) {
-                    if(!file.getName().equals("song_storage")) {
+                    if(!file.getName().equals("song_storage") && !file.getName().endsWith(".part")) {
+                        Log.d("NAME", file.getName());
                         mmr.setDataSource(String.valueOf(VK_PATH + file.getName()));
                         String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
                         if (Title == null) {
@@ -531,6 +568,32 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            File home_uni = new File(UNI_PATH);
+            File[] listOfFilesUNI = home_uni.listFiles(new vkmp3Filter());
+            if (listOfFilesUNI != null && listOfFilesUNI.length > 0) {
+                for (File file : home_uni.listFiles(new vkmp3Filter())) {
+                    if(!file.getName().equals("song_storage") && !file.getName().endsWith(".part")) {
+                        mmr.setDataSource(String.valueOf(UNI_PATH + file.getName()));
+                        String Title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                        if (Title == null) {
+                            Title = file.getName();
+                        }
+                        byte Source = 2;
+                        String Length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        String Album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                        if (Album == null) {
+                            Album = "Unknown Album";
+                        }
+                        String Artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                        if (Artist == null) {
+                            Artist = "Unknown Artist";
+                        }
+                        songs.add(new song(file.getName(), Title, Length, Source, Album, Artist, null));
+                    }
+                }
+            }
+
             Collections.sort(songs, new Comparator<song>() {
                 @Override
                 public int compare(song lhs, song rhs) {

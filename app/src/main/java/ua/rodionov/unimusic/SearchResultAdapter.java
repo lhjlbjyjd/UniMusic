@@ -49,8 +49,8 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     MainActivity mainActivity;
     public CircularProgressBar pb;
     public ImageButton db;
-    private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
-    File file = new File(VK_PATH + "song_storage");
+    private static final String UNI_PATH = Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
+    File file = new File(UNI_PATH + "song_storage");
 
     SearchResultAdapter(Context context, ArrayList<VKSong> songs, MainActivity _mainActivity){
         super();
@@ -195,7 +195,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 
                 // download the file
                 input = connection.getInputStream();
-                output = new FileOutputStream(VK_PATH + filename);
+                output = new FileOutputStream(UNI_PATH + filename);
 
                 byte data[] = new byte[4096];
                 long total = 0;
@@ -238,7 +238,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 
             try {
                 ID3v2 id3v2Tag;
-                Mp3File mp3file = new Mp3File(VK_PATH+filename);
+                Mp3File mp3file = new Mp3File(UNI_PATH+filename);
                 if (mp3file.hasId3v1Tag()) {
                     mp3file.removeId3v1Tag();
                 }
@@ -253,8 +253,8 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 id3v2Tag.setArtist(artist);
                 id3v2Tag.setTitle(title);
                 id3v2Tag.setComment(id);
-                mp3file.save(VK_PATH+filename+"_tagged");
-                File fl = new File(VK_PATH+filename);
+                mp3file.save(UNI_PATH+filename+"_tagged");
+                File fl = new File(UNI_PATH+filename);
                 fl.delete();
             }catch(Exception e){
                 e.printStackTrace();

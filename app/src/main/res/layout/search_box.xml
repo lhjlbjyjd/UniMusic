@@ -22,7 +22,7 @@
         android:imeOptions="actionSearch"/>
 
     <ImageButton
-        android:layout_width="50dp"
+        android:layout_width="60dp"
         android:layout_height="70dp"
         android:id="@+id/backButton"
         android:layout_alignBottom="@+id/searchBox"

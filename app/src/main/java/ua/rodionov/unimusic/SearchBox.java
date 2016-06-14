@@ -1,5 +1,6 @@
 package ua.rodionov.unimusic;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -39,6 +41,7 @@ public class SearchBox extends Fragment {
     SearchResultAdapter listAdapter;
     MainActivity mainActivity;
     boolean adapterSet = false;
+    ImageButton backButton;
 
     public void onResume (){
         super.onResume();
@@ -52,6 +55,20 @@ public class SearchBox extends Fragment {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.search_box, container, false);
         mainActivity = (MainActivity) getActivity();
+        backButton = (ImageButton) view.findViewById(R.id.backButton);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.searchOpened = false;
+                mainActivity.getSupportFragmentManager()
+                        .beginTransaction()
+                        .hide(mainActivity.getSupportFragmentManager().findFragmentById(R.id.SearchBox))
+                        .commit();
+                InputMethodManager imm = (InputMethodManager)mainActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                mainActivity.fab.show();
+            }
+        });
         list = (RecyclerView) view.findViewById(R.id.SearchResultList);
         searchBox = (EditText) view.findViewById(R.id.searchBox);
         searchBox.setOnEditorActionListener(new TextView.OnEditorActionListener() {
