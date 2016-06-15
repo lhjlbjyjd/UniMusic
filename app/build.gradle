@@ -28,12 +28,9 @@ dependencies {
     compile 'com.google.android.gms:play-services-appindexing:9.0.2'
     compile 'com.google.android.gms:play-services:9.0.2'
     compile 'com.google.android.gms:play-services-ads:9.0.2'
-    compile 'com.google.firebase:firebase-core:9.0.2'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:recyclerview-v7:23.4.0'
     compile 'com.mpatric:mp3agic:0.8.4'
     compile 'com.vk:androidsdk:1.6.7'
 }
-
-apply plugin: 'com.google.gms.google-services'
