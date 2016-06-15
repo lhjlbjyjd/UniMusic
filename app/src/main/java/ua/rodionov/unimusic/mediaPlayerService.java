@@ -1,6 +1,7 @@
 package ua.rodionov.unimusic;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,15 +12,18 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.RemoteViews;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
@@ -42,8 +46,8 @@ public class mediaPlayerService extends Service{
     int position;
     public MediaPlayer mp = new MediaPlayer();
     public MediaPlayer previewMP = new MediaPlayer();
-    private static String VK_PATH;
-    private static String UNI_PATH;
+    private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
+    private static final String UNI_PATH = Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
     private boolean shuffleActive = false;
     private int loop = 0;
     boolean songInterrupted = false;
@@ -59,6 +63,11 @@ public class mediaPlayerService extends Service{
 
     public static final String ACTION_PLAY = "ua.rodionov.unimusic.ACTION_PLAY";
 
+    public static final String ACTION_PREVIOUS = "ua.rodionov.unimusic.ACTION_PREVIOUS";
+
+    public static final String ACTION_NEXT = "ua.rodionov.unimusic.ACTION_NEXT";
+
+
     @Override
     public IBinder onBind(Intent intent) {
         Log.d("SERVICE", "MyService onBind");
@@ -70,15 +79,7 @@ public class mediaPlayerService extends Service{
     public void onCreate() {
         super.onCreate();
 
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
-                UNI_PATH =  Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
-            }
-        });
-
-        t.start();
+        rec.mService = this;
 
         am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
@@ -99,7 +100,7 @@ public class mediaPlayerService extends Service{
                         }
                     }
                 };
-        RemoteControlWidget remoteViews = new RemoteControlWidget(this, R.layout.notification);
+        RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
@@ -107,8 +108,10 @@ public class mediaPlayerService extends Service{
                         .setContent(remoteViews);
 
 
-        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        nm.notify(100, mBuilder.build());
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        // mId allows you to update the notification later on.
+        mNotificationManager.notify(546, mBuilder.build());
 
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -131,7 +134,8 @@ public class mediaPlayerService extends Service{
         filter.addAction("ua.rodionov.unimusic.ACTION_PLAY");
         filter.addAction("ua.rodionov.unimusic.ACTION_PREVIOUS");
         filter.addAction("ua.rodionov.unimusic.ACTION_NEXT");
-        registerReceiver(rec, filter);
+        //filter.addCategory("ua.rodionov.unimusic");
+        this.registerReceiver(rec, filter);
         Log.d("SERVICE", "STARTED2");
         return START_STICKY;
     }
@@ -186,92 +190,77 @@ public class mediaPlayerService extends Service{
                 // Request permanent focus.
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-
+            Log.d("SERVICE", "1");
             position = _position;
             songs = _songs;
 
-            final Handler h = new Handler() {
-                public void handleMessage(android.os.Message msg) {
-                    Log.d("SERVICE", "1");
+            playngSongName.setText(songs.get(position).getTitle());
+            frag1.setProgressBar(0);
 
-                    playngSongName.setText(songs.get(position).getTitle());
-                    frag1.setProgressBar(0);
-
-                    Log.d("SERVICE", "2");
-                    switch (songs.get(position).getSource()){
-                        case 0:
-                            try {
-                                mp.reset();
-                                mp.setDataSource(songs.get(position).data);
-                                mp.prepare();
-                                mp.start();
-                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                                if(bar != null && bar.getView() != null) {
-                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 1:
-                            try {
-                                mp.reset();
-                                mp.setDataSource(VK_PATH + (songs.get(position)).getName());
-                                mp.prepare();
-                                mp.start();
-                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                                if(bar != null && bar.getView() != null) {
-                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 2:
-                            try {
-                                mp.reset();
-                                mp.setDataSource(UNI_PATH + (songs.get(position)).getName());
-                                mp.prepare();
-                                mp.start();
-                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                                if(bar != null && bar.getView() != null) {
-                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
+            Log.d("SERVICE", "2");
+            switch (songs.get(position).getSource()){
+                case 0:
+                    try {
+                        mp.reset();
+                        mp.setDataSource(songs.get(position).data);
+                        mp.prepare();
+                        mp.start();
+                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                        if(bar != null && bar.getView() != null) {
+                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    String duration = songs.get(position).getDuration();
-                    Log.v("time", duration);
-                    dur = Long.parseLong(duration);
-
-                    Log.d("SERVICE", "3");
-
-                    if (mTimer != null) {
-                        mTimer.cancel();
+                    break;
+                case 1:
+                    try {
+                        mp.reset();
+                        mp.setDataSource(VK_PATH + (songs.get(position)).getName());
+                        mp.prepare();
+                        mp.start();
+                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                        if(bar != null && bar.getView() != null) {
+                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+                    break;
+                case 2:
+                    try {
+                        mp.reset();
+                        mp.setDataSource(UNI_PATH + (songs.get(position)).getName());
+                        mp.prepare();
+                        mp.start();
+                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                        if(bar != null && bar.getView() != null) {
+                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+            String duration = songs.get(position).getDuration();
+            Log.v("time", duration);
+            dur = Long.parseLong(duration);
 
-                    mTimer = new Timer();
-                    mMyTimerTask = new MyTimerTask();
-                    mTimer.schedule(mMyTimerTask, 500, 500);
-                }
-            };
+            Log.d("SERVICE", "3");
 
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    h.sendEmptyMessage(0);
-                }
-            });
+            if (mTimer != null) {
+                mTimer.cancel();
+            }
 
-            t.start();
+            mTimer = new Timer();
+            mMyTimerTask = new MyTimerTask();
+            mTimer.schedule(mMyTimerTask, 500, 500);
         }
     }
 
@@ -337,9 +326,6 @@ public class mediaPlayerService extends Service{
 
     public void pausePlayer(){
         mp.pause();
-        if (mTimer != null) {
-            mTimer.cancel();
-        }
     }
 
     public void resumePlayer() {
@@ -350,9 +336,6 @@ public class mediaPlayerService extends Service{
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             mp.start();
-            mTimer = new Timer();
-            mMyTimerTask = new MyTimerTask();
-            mTimer.schedule(mMyTimerTask, 500, 500);
         }
     }
 
@@ -405,9 +388,25 @@ public class mediaPlayerService extends Service{
 
     public static class Receiver extends BroadcastReceiver{
 
+        mediaPlayerService mService;
+
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("REC", "REC");
+            switch(intent.getAction()){
+                case ACTION_PLAY:
+                    if(mService.mp.isPlaying()){
+                        mService.pausePlayer();
+                    }else{
+                        mService.resumePlayer();
+                    }
+                    break;
+                case ACTION_PREVIOUS:
+                    mService.playPrevSong();
+                    break;
+                case ACTION_NEXT:
+                    mService.playNextSong();
+                    break;
+            }
         }
     }
 

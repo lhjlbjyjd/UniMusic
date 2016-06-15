@@ -21,18 +21,18 @@ public class RemoteControlWidget extends RemoteViews {
 
     public RemoteControlWidget(Context context, int layoutId)
     {
-        super(context.getPackageName(), layoutId);
+        super("ua.rodionov.unimusic", layoutId);
         mContext = context;
         Intent intent = new Intent(ACTION_PLAY);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext.getApplicationContext(),100,
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext,100,
                 intent,PendingIntent.FLAG_UPDATE_CURRENT);
         setOnClickPendingIntent(R.id.play_control,pendingIntent);
         intent = new Intent(ACTION_PREVIOUS);
-        pendingIntent = PendingIntent.getBroadcast(mContext.getApplicationContext(),101,
+        pendingIntent = PendingIntent.getBroadcast(mContext,101,
                 intent,PendingIntent.FLAG_UPDATE_CURRENT);
         setOnClickPendingIntent(R.id.previous_control,pendingIntent);
         intent = new Intent(ACTION_NEXT);
-        pendingIntent = PendingIntent.getBroadcast(mContext.getApplicationContext(),102,
+        pendingIntent = PendingIntent.getBroadcast(mContext,102,
                 intent,PendingIntent.FLAG_UPDATE_CURRENT);
         setOnClickPendingIntent(R.id.next_control,pendingIntent);
     }
