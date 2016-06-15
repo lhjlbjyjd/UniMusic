@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ua.rodionov.unimusic">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -31,18 +32,6 @@
             android:name=".mediaPlayerService"
             android:enabled="true" />
 
-        <receiver android:name=".mediaPlayerService$Receiver"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="ua.rodionov.unimusic.ACTION_PLAY" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="ua.rodionov.unimusic.ACTION_PREVIOUS" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="ua.rodionov.unimusic.ACTION_NEXT" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

@@ -1,7 +1,6 @@
 package ua.rodionov.unimusic;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,18 +11,15 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageButton;
-import android.widget.RemoteViews;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
@@ -46,8 +42,8 @@ public class mediaPlayerService extends Service{
     int position;
     public MediaPlayer mp = new MediaPlayer();
     public MediaPlayer previewMP = new MediaPlayer();
-    private static final String VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
-    private static final String UNI_PATH = Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
+    private static String VK_PATH;
+    private static String UNI_PATH;
     private boolean shuffleActive = false;
     private int loop = 0;
     boolean songInterrupted = false;
@@ -74,6 +70,16 @@ public class mediaPlayerService extends Service{
     public void onCreate() {
         super.onCreate();
 
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                VK_PATH = Environment.getExternalStorageDirectory().getPath() + "/.vkontakte/cache/audio/";
+                UNI_PATH =  Environment.getExternalStorageDirectory().getPath() + "/.UniMusic/audio/";
+            }
+        });
+
+        t.start();
+
         am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
         afChangeListener =
@@ -93,7 +99,7 @@ public class mediaPlayerService extends Service{
                         }
                     }
                 };
-        RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
+        RemoteControlWidget remoteViews = new RemoteControlWidget(this, R.layout.notification);
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
@@ -101,10 +107,8 @@ public class mediaPlayerService extends Service{
                         .setContent(remoteViews);
 
 
-
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        // mId allows you to update the notification later on.
-        mNotificationManager.notify(546, mBuilder.build());
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        nm.notify(100, mBuilder.build());
 
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -127,8 +131,7 @@ public class mediaPlayerService extends Service{
         filter.addAction("ua.rodionov.unimusic.ACTION_PLAY");
         filter.addAction("ua.rodionov.unimusic.ACTION_PREVIOUS");
         filter.addAction("ua.rodionov.unimusic.ACTION_NEXT");
-        //filter.addCategory("ua.rodionov.unimusic");
-        this.registerReceiver(rec, filter);
+        registerReceiver(rec, filter);
         Log.d("SERVICE", "STARTED2");
         return START_STICKY;
     }
@@ -183,77 +186,92 @@ public class mediaPlayerService extends Service{
                 // Request permanent focus.
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.d("SERVICE", "1");
+
             position = _position;
             songs = _songs;
 
-            playngSongName.setText(songs.get(position).getTitle());
-            frag1.setProgressBar(0);
+            final Handler h = new Handler() {
+                public void handleMessage(android.os.Message msg) {
+                    Log.d("SERVICE", "1");
 
-            Log.d("SERVICE", "2");
-            switch (songs.get(position).getSource()){
-                case 0:
-                    try {
-                        mp.reset();
-                        mp.setDataSource(songs.get(position).data);
-                        mp.prepare();
-                        mp.start();
-                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                        if(bar != null && bar.getView() != null) {
-                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    playngSongName.setText(songs.get(position).getTitle());
+                    frag1.setProgressBar(0);
+
+                    Log.d("SERVICE", "2");
+                    switch (songs.get(position).getSource()){
+                        case 0:
+                            try {
+                                mp.reset();
+                                mp.setDataSource(songs.get(position).data);
+                                mp.prepare();
+                                mp.start();
+                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                                if(bar != null && bar.getView() != null) {
+                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                        case 1:
+                            try {
+                                mp.reset();
+                                mp.setDataSource(VK_PATH + (songs.get(position)).getName());
+                                mp.prepare();
+                                mp.start();
+                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                                if(bar != null && bar.getView() != null) {
+                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                        case 2:
+                            try {
+                                mp.reset();
+                                mp.setDataSource(UNI_PATH + (songs.get(position)).getName());
+                                mp.prepare();
+                                mp.start();
+                                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                                if(bar != null && bar.getView() != null) {
+                                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            break;
                     }
-                    break;
-                case 1:
-                    try {
-                        mp.reset();
-                        mp.setDataSource(VK_PATH + (songs.get(position)).getName());
-                        mp.prepare();
-                        mp.start();
-                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                        if(bar != null && bar.getView() != null) {
-                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    String duration = songs.get(position).getDuration();
+                    Log.v("time", duration);
+                    dur = Long.parseLong(duration);
+
+                    Log.d("SERVICE", "3");
+
+                    if (mTimer != null) {
+                        mTimer.cancel();
                     }
-                    break;
-                case 2:
-                    try {
-                        mp.reset();
-                        mp.setDataSource(UNI_PATH + (songs.get(position)).getName());
-                        mp.prepare();
-                        mp.start();
-                        mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                                .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-                        if(bar != null && bar.getView() != null) {
-                            ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                            btn.setImageResource(R.drawable.ic_pause_black_48dp);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    break;
-            }
-            String duration = songs.get(position).getDuration();
-            Log.v("time", duration);
-            dur = Long.parseLong(duration);
 
-            Log.d("SERVICE", "3");
+                    mTimer = new Timer();
+                    mMyTimerTask = new MyTimerTask();
+                    mTimer.schedule(mMyTimerTask, 500, 500);
+                }
+            };
 
-            if (mTimer != null) {
-                mTimer.cancel();
-            }
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    h.sendEmptyMessage(0);
+                }
+            });
 
-            mTimer = new Timer();
-            mMyTimerTask = new MyTimerTask();
-            mTimer.schedule(mMyTimerTask, 500, 500);
+            t.start();
         }
     }
 
@@ -319,6 +337,9 @@ public class mediaPlayerService extends Service{
 
     public void pausePlayer(){
         mp.pause();
+        if (mTimer != null) {
+            mTimer.cancel();
+        }
     }
 
     public void resumePlayer() {
@@ -329,6 +350,9 @@ public class mediaPlayerService extends Service{
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             mp.start();
+            mTimer = new Timer();
+            mMyTimerTask = new MyTimerTask();
+            mTimer.schedule(mMyTimerTask, 500, 500);
         }
     }
 
@@ -379,7 +403,7 @@ public class mediaPlayerService extends Service{
         }
     }
 
-    public class Receiver extends BroadcastReceiver{
+    public static class Receiver extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {

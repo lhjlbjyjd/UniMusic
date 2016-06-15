@@ -67,23 +67,23 @@ public class songFocus extends AppCompatActivity{
 
         //AdMob Google
 
-        /*MobileAds.initialize(getApplicationContext(), "ca-app-pub-3872207617963522~9202780494");
+        //MobileAds.initialize(getApplicationContext(), "ca-app-pub-3872207617963522~9202780494");
 
         NativeExpressAdView adView = (NativeExpressAdView)findViewById(R.id.adView);
 
         AdRequest request = new AdRequest.Builder()
                 .build();
-        adView.loadAd(request);*/
+        adView.loadAd(request);
 
 
         if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            //adView.setLayoutParams(new RelativeLayout.LayoutParams(width, (height / 2) - 30));
+            adView.setLayoutParams(new RelativeLayout.LayoutParams(width, (height / 2) - 30));
             songCover.setLayoutParams(new RelativeLayout.LayoutParams(width, (height / 2) - 30));
             RelativeLayout.LayoutParams p = new RelativeLayout.LayoutParams(width, (height / 2) - 10);
             p.addRule(RelativeLayout.BELOW, R.id.songCover);
             controlsLayout.setLayoutParams(p);
         }else{
-            //adView.setLayoutParams(new RelativeLayout.LayoutParams(width/2, height));
+            adView.setLayoutParams(new RelativeLayout.LayoutParams(width/2, height));
             songCover.setLayoutParams(new RelativeLayout.LayoutParams(width/2, height));
             RelativeLayout.LayoutParams p = new RelativeLayout.LayoutParams(width/2, height);
             p.addRule(RelativeLayout.RIGHT_OF, R.id.songCover);
@@ -178,12 +178,6 @@ public class songFocus extends AppCompatActivity{
         Intent intent = new Intent(this, mediaPlayerService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
-
-    /*@Override
-    public void onDestroy(){
-        super.onDestroy();
-        unbindService(mConnection);
-    }*/
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
