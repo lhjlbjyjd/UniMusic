@@ -59,6 +59,8 @@ public class mediaPlayerService extends Service{
     String previewSongName = "";
     AudioManager.OnAudioFocusChangeListener afChangeListener;
     private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener;
+    private static final int NOTIFICATION_ID = 84221;
+    NotificationCompat.Builder mBuilder;
     String source;
 
     public static final String ACTION_PLAY = "ua.rodionov.unimusic.ACTION_PLAY";
@@ -100,18 +102,7 @@ public class mediaPlayerService extends Service{
                         }
                     }
                 };
-        RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
 
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContent(remoteViews);
-
-
-
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        // mId allows you to update the notification later on.
-        mNotificationManager.notify(546, mBuilder.build());
 
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -158,23 +149,30 @@ public class mediaPlayerService extends Service{
             if(mp.isPlaying()){
                 mp.pause();
             }
-            previewMP.reset();
-            previewMP.setDataSource(url);
-            previewMP.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
-                    .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
-            if(bar != null && bar.getView() != null) {
-                ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
-                btn.setImageResource(R.drawable.ic_pause_black_48dp);
-            }
-            previewMP.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    previewMP.start();
-                    dur = previewMP.getDuration();
+            int result = am.requestAudioFocus(afChangeListener,
+                    // Use the music stream.
+                    AudioManager.STREAM_MUSIC,
+                    // Request permanent focus.
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                previewMP.reset();
+                previewMP.setDataSource(url);
+                previewMP.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mediaPlayerControlBar bar = (mediaPlayerControlBar) mainActivity
+                        .getSupportFragmentManager().findFragmentById(R.id.mediaPlayerControlBar);
+                if (bar != null && bar.getView() != null) {
+                    ImageButton btn = (ImageButton) bar.getView().findViewById(R.id.playButton);
+                    btn.setImageResource(R.drawable.ic_pause_black_48dp);
                 }
-            });
-            previewMP.prepareAsync();
+                previewMP.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        previewMP.start();
+                        dur = previewMP.getDuration();
+                    }
+                });
+                previewMP.prepareAsync();
+            }
         }catch(IOException ignore) {
 
         }
@@ -190,6 +188,19 @@ public class mediaPlayerService extends Service{
                 // Request permanent focus.
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+
+            RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
+
+            mBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContent(remoteViews);
+
+            remoteViews.setViewVisibility(R.id.play_control, View.INVISIBLE);
+            remoteViews.setViewVisibility(R.id.pause_control, View.VISIBLE);
+
+            startForeground(NOTIFICATION_ID, mBuilder.build());
+
             Log.d("SERVICE", "1");
             position = _position;
             songs = _songs;
@@ -325,6 +336,21 @@ public class mediaPlayerService extends Service{
     }
 
     public void pausePlayer(){
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
+
+        stopForeground(false);
+
+        mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContent(remoteViews);
+
+        remoteViews.setViewVisibility(R.id.play_control, View.VISIBLE);
+        remoteViews.setViewVisibility(R.id.pause_control, View.INVISIBLE);
+
+        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+
         mp.pause();
     }
 
@@ -335,6 +361,18 @@ public class mediaPlayerService extends Service{
                 // Request permanent focus.
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            RemoteControlWidget remoteViews = new RemoteControlWidget(getApplicationContext(), R.layout.notification);
+
+            mBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContent(remoteViews);
+
+            remoteViews.setViewVisibility(R.id.play_control, View.INVISIBLE);
+            remoteViews.setViewVisibility(R.id.pause_control, View.VISIBLE);
+
+            startForeground(NOTIFICATION_ID, mBuilder.build());
+
             mp.start();
         }
     }
@@ -394,10 +432,13 @@ public class mediaPlayerService extends Service{
         public void onReceive(Context context, Intent intent) {
             switch(intent.getAction()){
                 case ACTION_PLAY:
-                    if(mService.mp.isPlaying()){
-                        mService.pausePlayer();
-                    }else{
-                        mService.resumePlayer();
+                    if(mService.songs != null) {
+                        if (mService.mp.isPlaying()) {
+                            mService.pausePlayer();
+
+                        } else {
+                            mService.resumePlayer();
+                        }
                     }
                     break;
                 case ACTION_PREVIOUS:

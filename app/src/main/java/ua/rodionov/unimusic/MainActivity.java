@@ -247,8 +247,6 @@ public class MainActivity extends AppCompatActivity {
 
         };
 
-        updatePlaylist();
-
         fab = (FloatingActionButton)findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -288,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
         }
         isBound = getApplicationContext().bindService(intent, sConn, BIND_AUTO_CREATE);
+        updatePlaylist();
     }
 
     @Override
@@ -557,15 +556,31 @@ public class MainActivity extends AppCompatActivity {
                         return lhs.Title.compareTo(rhs.Title);
                     }
                 });
-                editor.putBoolean("ListCreated", true);
-                editor.putString("songs", new Gson().toJson(songs));
-                editor.commit();
             } else {
                 songs = new Gson().fromJson(sPref.getString("songs", ""), new TypeToken<List<song>>() {
                 }.getType());
             }
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void a) {
+            Log.d("POST", "POST");
+            editor.putBoolean("ListCreated", true);
+            editor.putString("songs", new Gson().toJson(songs));
+            editor.commit();
+
+            if (track != null && track.list != null) {
+                track.refreshList(songs);
+            }
+            if (vktracks != null && vktracks.list != null) {
+                vktracks.refreshList(songs);
+            }
+            if (deviceTracks != null && deviceTracks.list != null) {
+                deviceTracks.refreshList(songs);
+            }
+        }
+
     }
 
 
@@ -778,21 +793,19 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(songs, new Comparator<song>() {
                 @Override
                 public int compare(song lhs, song rhs) {
-                    Log.d("LHS", lhs.Title);
-                    Log.d("RHS", rhs.Title);
-                    Log.d("RES", String.valueOf(lhs.Title.compareTo(rhs.Title)));
                     return lhs.Title.compareTo(rhs.Title);
                 }
             });
-            editor.putBoolean("ListCreated", true);
-            editor.putString("songs", new Gson().toJson(songs));
-            editor.apply();
             return null;
         }
 
         @Override
         protected void onPostExecute(String result){
             Log.d("POST", "POST");
+            editor.putBoolean("ListCreated", true);
+            editor.putString("songs", new Gson().toJson(songs));
+            editor.commit();
+
             if(track != null && track.list != null){
                 track.refreshList(songs);
             }

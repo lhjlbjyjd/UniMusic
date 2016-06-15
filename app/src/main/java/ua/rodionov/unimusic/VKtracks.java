@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,7 @@ public class VKtracks extends Fragment {
         super.onActivityCreated(savedInstanceState);
         mainActivity = (MainActivity)getActivity();
         songs = new ArrayList<>(mainActivity.songs);
+        Log.d("SONGS1", String.valueOf(songs.size()));
         Iterator<song> itr = songs.iterator();
         while (itr.hasNext()) {
             song element = itr.next();
@@ -42,6 +44,7 @@ public class VKtracks extends Fragment {
                 itr.remove();
             }
         }
+        Log.d("SONGS2", String.valueOf(songs.size()));
         listAdapter = new SongListAdapter(getContext(),songs, mainActivity);
         listAdapter.notifyDataSetChanged();
         list.setHasFixedSize(true);

@@ -27,6 +27,7 @@ public class RemoteControlWidget extends RemoteViews {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext,100,
                 intent,PendingIntent.FLAG_UPDATE_CURRENT);
         setOnClickPendingIntent(R.id.play_control,pendingIntent);
+        setOnClickPendingIntent(R.id.pause_control,pendingIntent);
         intent = new Intent(ACTION_PREVIOUS);
         pendingIntent = PendingIntent.getBroadcast(mContext,101,
                 intent,PendingIntent.FLAG_UPDATE_CURRENT);
